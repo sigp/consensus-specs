@@ -1658,9 +1658,7 @@ def process_deposit(state: BeaconState, deposit: Deposit) -> None:
     if pubkey not in validator_pubkeys:
         # Verify the deposit signature (proof of possession) for new validators.
         # Note: The deposit contract does not check signatures.
-        # Note: Deposits are valid across forks, thus the deposit domain is retrieved directly from `compute_domain`.
-        domain = compute_domain(DOMAIN_DEPOSIT)
-        if not bls_verify(pubkey, signing_root(deposit.data), deposit.data.signature, domain):
+        if not bls_verify_pop(pubkey, deposit.data.signature):
             return
 
         # Add validator and balance entries

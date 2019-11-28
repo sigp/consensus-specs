@@ -11,12 +11,15 @@
         - [G2 points](#g2-points)
     - [Ciphersuite](#ciphersuite)
     - [Hash to G2](#hash_to_g2)
+        - [Helper functions](#helper_functions)
     - [Signature verification](#signature-verification)
         - [`bls_verify`](#bls_verify)
         - [`bls_verify_multiple`](#bls_verify_multiple)
     - [Aggregation](#aggregation)
         - [`bls_aggregate_pubkeys`](#bls_aggregate_pubkeys)
         - [`bls_aggregate_signatures`](#bls_aggregate_signatures)
+    - [Proof of possession verification](#proof_of_possession_verification)
+        - [`bls_verify_pop`](#bls_verify_pop)
 
 <!-- /TOC -->
 
@@ -81,9 +84,9 @@ We use the `BLS_SIG_BLS12381G2-SHA256-SSWU-RO-_POP_` ciphersuite where:
 `hash_to_G2` is equivalent to `hash_to_curve` found in [hash-to-curve-05#section-3](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-3). It is defined as
 
 ```python
-def hash_to_G2(alpha: Bytes) -> Tuple[uint384, uint384]:
-   u0 = hash_to_base(alpha, 0)
-   u1 = hash_to_base(alpha, 1)
+def hash_to_G2(alpha: Bytes, dst: str) -> Tuple[uint384, uint384]:
+   u0 = hash_to_base(alpha, 0, dst)
+   u1 = hash_to_base(alpha, 1, dst)
    Q0 = map_to_curve(u0)
    Q1 = map_to_curve(u1)
    R = Q0 + Q1 # point addition
@@ -91,17 +94,25 @@ def hash_to_G2(alpha: Bytes) -> Tuple[uint384, uint384]:
    return P
  ```
 
-* `hash_to_base` converts a message from bytes to a field point (see [hash-to-curve-05#section-5.3](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-5.3)). The parameters are:
-    * domain separation tag—`DST = BLS_SIG_BLS12381G2-SHA256-SSWU-RO-_POP_`
+An implementation of `hash_to_curve` can be found [here](https://github.com/kwantam/bls_sigs_ref/blob/93b58f3e9f9ef55085f9ad78c708fa5ad9b894df/python-impl/opt_swu_g2.py#L131).
+
+### Helper functions
+
+`hash_to_base` converts a message from bytes to a field point (see [hash-to-curve-05#section-5.3](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-5.3)).
+* The parameters are:
     * hash function—`H = SHA256`
     * field degree—`m = 2`
     * length of HKDF—`L = 64`
-* `map_to_curve` converts a field point to a G2 point in two steps:
+* The arguments are:
+    * `alpha`- the message being hashed
+    * `ctr`- an integer for creating different hash functions
+    * `DST`- the domain separation tag
+
+`map_to_curve` converts a field point to a G2 point in two steps:
     1) it applies a simplified SWU map (see [hash-to-curve-05#section-6.6.3](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-6.6.3)) to the 3-isogeny curve  `E'` (see [hash-to-curve-05#section-8.9.2](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-8.9.2))
     2) it maps the point on `E'` to a G2 point using `iso_map` (see [hash-to-curve-05#appendix-C.3](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#appendix-C.3))
-* `clear_cofactor` ensures the point is in the correct subfield by multiplying by the curve coefficient `h_eff` (see [hash-to-curve-05#section-8.9.2](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-8.9.2)).
 
-An implementation of `hash_to_curve` can be found [here](https://github.com/kwantam/bls_sigs_ref/blob/93b58f3e9f9ef55085f9ad78c708fa5ad9b894df/python-impl/opt_swu_g2.py#L131).
+`clear_cofactor` ensures the point is in the correct subfield by multiplying by the curve coefficient `h_eff` (see [hash-to-curve-05#section-8.9.2](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-05#section-8.9.2)).
 
 ## Signature verification
 
@@ -119,7 +130,8 @@ Let `bls_verify(pubkey: Bytes48, message_hash: Bytes32, signature: Bytes96, doma
 
 * Verify that `pubkey` is a valid G1 point.
 * Verify that `signature` is a valid G2 point.
-* Verify that `e(pubkey, hash_to_G2(message_hash, domain)) == e(g, signature)`.
+* Let `dst = "BLS_SIG_BLS12381G2-SHA256-SSWU-RO-_POP_"`
+* Verify that `e(pubkey, hash_to_G2(message_hash + domain, dst)) == e(g, signature)`.
 
 ### `bls_verify_multiple`
 
@@ -139,3 +151,14 @@ Let `bls_aggregate_pubkeys(pubkeys: List[Bytes48]) -> Bytes48` return `pubkeys[0
 ### `bls_aggregate_signatures`
 
 Let `bls_aggregate_signatures(signatures: List[Bytes96]) -> Bytes96` return `signatures[0] + .... + signatures[len(signatures) - 1]`, where `+` is the elliptic curve addition operation over the G2 curve. (When `len(signatures) == 0` the empty sum is the G2 point at infinity.)
+
+## Proof of possession verification
+
+### `bls_verify_pop`
+
+Let `bls_verify_pop(pubkey: Bytes48, signature: Bytes96) -> bool`:
+
+* Verify that `pubkey` is a valid G1 point.
+* Verify that `signature` is a valid G2 point.
+* Let `dst = "BLS_POP_BLS12381G2-SHA256-SSWU-RO-_POP_"`
+* Verify that `e(pubkey, hash_to_G2(pubkey, dst)) == e(g, signature)`.

@@ -34,6 +34,12 @@ def bls_verify_multiple(pubkeys, message_hashes, signature, domain):
                                signature=signature, domain=domain)
 
 
+@only_with_bls(alt_return=True)
+def bls_verify_pop(pubkey, signature):
+    return bls.verify(message_hash=pubkey, pubkey=pubkey,
+                      signature=signature, domain=b'')
+
+
 @only_with_bls(alt_return=STUB_PUBKEY)
 def bls_aggregate_pubkeys(pubkeys):
     return bls.aggregate_pubkeys(pubkeys)

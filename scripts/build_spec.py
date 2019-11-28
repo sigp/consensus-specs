@@ -31,6 +31,7 @@ from eth2spec.utils.bls import (
     bls_aggregate_pubkeys,
     bls_verify,
     bls_verify_multiple,
+    bls_verify_pop,
     bls_sign,
 )
 
@@ -63,6 +64,7 @@ from eth2spec.utils.bls import (
     bls_aggregate_pubkeys,
     bls_verify,
     bls_verify_multiple,
+    bls_verify_pop,
     bls_signature_to_G2,
 )
 
