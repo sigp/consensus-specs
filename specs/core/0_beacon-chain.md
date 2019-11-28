@@ -258,9 +258,8 @@ The following types are defined, mapping into `DomainType` (little endian):
 | `DOMAIN_BEACON_PROPOSER` | `0` |
 | `DOMAIN_RANDAO` | `1` |
 | `DOMAIN_ATTESTATION` | `2` |
-| `DOMAIN_DEPOSIT` | `3` |
-| `DOMAIN_VOLUNTARY_EXIT` | `4` |
-| `DOMAIN_TRANSFER` | `5` |
+| `DOMAIN_VOLUNTARY_EXIT` | `3` |
+| `DOMAIN_TRANSFER` | `4` |
 
 ## Containers
 
