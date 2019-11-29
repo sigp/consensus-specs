@@ -380,7 +380,7 @@ class DepositData(Container):
     pubkey: BLSPubkey
     withdrawal_credentials: Hash
     amount: Gwei
-    signature: BLSSignature
+    proof_of_possession: BLSSignature
 ```
 
 #### `BeaconBlockHeader`
@@ -1655,9 +1655,9 @@ def process_deposit(state: BeaconState, deposit: Deposit) -> None:
     amount = deposit.data.amount
     validator_pubkeys = [v.pubkey for v in state.validators]
     if pubkey not in validator_pubkeys:
-        # Verify the deposit signature (proof of possession) for new validators.
+        # Verify the proof of possession for new validators.
         # Note: The deposit contract does not check signatures.
-        if not bls_verify_pop(pubkey, deposit.data.signature):
+        if not bls_verify_pop(pubkey, deposit.data.proof_of_possession):
             return
 
         # Add validator and balance entries

@@ -31,7 +31,7 @@ def sign_deposit_data(spec, deposit_data, privkey, state=None):
         privkey=privkey,
         domain=domain,
     )
-    deposit_data.signature = signature
+    deposit_data.proof_of_possession = signature
 
 
 def build_deposit(spec,
