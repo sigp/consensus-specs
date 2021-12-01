@@ -1,4 +1,4 @@
-# Optimistic sync
+# Optimistic Sync -- Fork Choice
 
 **Notice**: This document is a work-in-progress for researchers and implementers.
 
